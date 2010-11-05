@@ -1,8 +1,9 @@
-require './position'
+Pos = Struct.new(:x,:y)
+
+State = Struct.new(:breezy,:smelly,:glittery,:pitPossibility,
+				   :wumpusPossibility,:empty,:black)
 
 class WumpusWorld
-	attr_reader :world
-
 	def initialize(infile_name)	
 		@world = {}
 			
@@ -38,5 +39,34 @@ class WumpusWorld
 				   @world[Pos.new(x-origin_x,y-origin_y)] = matrix[x][y]
 			   end	       
 		end
+	end
+
+	def getStateAt(pos)
+		flag = @world[pos]
+		state = State.new
+		state.pitPossibility = state.wumpusPossibility = 0
+		case flag
+				when :Black
+						state.black = true
+				when :Empty
+						state.empty = true
+				when :Breeze
+						state.breezy = true
+				when :Stench
+						state.smelly = true
+				when :Glitter
+						state.glittery = true
+				when :BreezeStench
+						state.breezy = true
+						state.smelly = true
+				when :BreezeGlitter
+						state.breezy = true
+						state.glittery = true
+				when :BreezeStenchGlitter
+						state.breezy = true
+						state.smelly = true
+						state.glittery = true
+		end
+		return state
 	end
 end
