@@ -1,0 +1,151 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\author{Pascal Chatterjee & Joakim Carselind}
+\title{CS3243 HW2T: Agent}
+
+\begin{document} 
+
+\section*{CS3243 HW2T Agent}
+
+Below are the algorithms that make up the AI for our agent. We chose to use a model-based agent, as a purely reflex based agent would not take advantage of the possibilities of logical inference in the world, and the lack of information about the proximity of the gold would have made a goal-based agent useless.
+
+The agent explores the map by visiting all the safe, unexplored neighbours of its current tile (which we call base), updating its model, and then selecting a safe neighbour to be the next base. This continues until the agent visits a tile containing the gold, whereupon it picks up the gold and then tries to exit the world as quickly as possible.  
+
+If the agent ever finds itself in a position in which it cannot move to a safe, unexplored tile, it will return to the origin and start over. This eliminates the risk of our agent trapping itself in a region of the map and exiting prematurely. However, this also means that our agent refuses to accept the possibility that there is no way of reaching the gold (if any exists). In other words, our AI will \textit{never give up}.  
+
+We ensure that we only move to tiles we have some knowledge about by making cross-moves before diagonal ones. As we also shuffle the order in which we make diagonal moves, our choice of the next base (which is the tile reached via the last executed safe move) has a degree of randomness. This should reduce the risk of our agent boxing itself into a region (and even if it does, as explained above, we will just start over).  
+
+\listofalgorithms 
+
+\begin{algorithm}
+\caption{Search Function - \textbf{explore}()}
+\label{explore}
+\begin{algorithmic}[1]
+\REQUIRE CROSS MOVES $\leftarrow$ [(1,0),(-1,0),(0,1),(0,-1)]
+\REQUIRE DIAGONAL MOVES $\leftarrow$ [(1,1),(-1,-1),(1,-1),(-1,1)]
+\STATE KnowledgeBase $\leftarrow$ $\emptyset$
+\STATE explored $\leftarrow$ $\emptyset$
+\STATE
+\STATE origin $\leftarrow$ (0,0)
+\STATE origin state $\leftarrow$ \textbf{perceive}
+\STATE KnowledgeBase.\textbf{put}(origin state)
+\STATE \textbf{infer}(origin)
+\STATE \textbf{explored}(origin.X,origin.Y) $\leftarrow$ $true$
+\STATE base $\leftarrow$ origin
+\STATE
+\LOOP
+\STATE MOVES $\leftarrow$ CROSS MOVES $\cup$ \textbf{shuffle}(DIAGONAL MOVES)
+\STATE movesMade $\leftarrow$ 0
+\FORALL{Move m in MOVES}
+\STATE newX $\leftarrow$ base.x $+$ m.x 
+\STATE newY $\leftarrow$ base.y $+$ m.y
+\IF{\textbf{isSafe}(newX,newY) $\wedge$  $\lnot$ \textbf{explored}(newX,newY)}
+\STATE \textbf{moveTo}(newX,newY)
+\STATE movesMade $\leftarrow$ movesMade + 1
+\STATE state $\leftarrow$ \textbf{perceive}
+\STATE KnowledgeBase.\textbf{put}(state)
+\STATE \textbf{infer}(state)
+\STATE \textbf{explored}(newX,newY) $\leftarrow$ $true$
+\IF{\textbf{isGlittery}(state)}
+\STATE \textbf{pickUpGold}
+\STATE foundTheGold $\leftarrow$ $true$
+\STATE \textbf{escape}(newX,newY)
+\ENDIF
+\IF{$\lnot$\textbf{isBlack}(state)}
+\STATE nextBase $\leftarrow$ (newX,newY)
+\ENDIF
+\STATE \textbf{moveTo}(base.x,base.y)
+\ENDIF
+\ENDFOR
+\IF{movesMade = 0}
+\STATE \textbf{escape}(base.x,base.y)
+\ENDIF
+\STATE base $\leftarrow$ nextBase
+\STATE \textbf{moveTo}(base.x,base.y)
+\ENDLOOP
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\begin{algorithm}
+\caption{Inference Function - \textbf{infer}()}
+\label{infer}
+\begin{algorithmic}[1]
+\REQUIRE a state to infer knowledge about
+\REQUIRE CROSS MOVES $\leftarrow$ [(1,0),(-1,0),(0,1),(0,-1)]
+\REQUIRE a KnowledgeBase to update
+\REQUIRE a list of explored states so we don't infer knowledge about states we already know everything about
+\FORALL{Move m in CROSS MOVES}
+\STATE adjacentX $\leftarrow$ state.x $+$ m.x 
+\STATE adjacentY $\leftarrow$ state.y $+$ m.y
+
+\IF{KnowledgeBase.\textbf{contains}(adjacentX,adjacentY)}
+\STATE adjState $\leftarrow$ KnowledgeBase.\textbf{get}(adjacentX,adjacentY)
+\ELSE
+\STATE adjState $\leftarrow$ \textbf{new} State
+\ENDIF
+\STATE
+\IF{$\lnot$\textbf{explored}(adjState)}
+\IF{\textbf{isEmpty}(state)}
+\STATE adjState.isEmpty $\leftarrow$ $true$
+\ELSE
+\IF{\textbf{isBreezy}(state)}
+\STATE adjState.pitPossibility $\leftarrow$ adjState.pitPossibility + 1
+\ENDIF
+\IF{\textbf{isSmelly}(state)}
+\STATE adjState.wumpusPossibility $\leftarrow$ adjState.wumpusPossibility + 1
+\ENDIF
+\ENDIF
+\ENDIF
+\STATE KnowledgeBase.\textbf{update}(adjState)
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\begin{algorithm}
+\caption{Safety Evaluation Function - \textbf{isSafe}()}
+\label{isSafe}
+\begin{algorithmic}[1]
+\REQUIRE a position (x,y) to evaluate
+\REQUIRE a KnowledgeBase
+\STATE state $\leftarrow$ KnowledgeBase.\textbf{get}(x,y)
+\IF{\textbf{isBlack}(state)}
+\RETURN $false$
+\ENDIF
+\IF{\textbf{isEmpty}(state) $\vee$ (state.pitPossibility = 0 $\wedge$ state.wumpusPossibility = 0)}
+\RETURN $true$
+\ELSE
+\RETURN $false$
+\ENDIF
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Escaping Function - \textbf{escape}()}
+\label{escape}
+\begin{algorithmic}[1]
+\REQUIRE a KnowledgeBase
+\REQUIRE a startingPosition
+\REQUIRE whether we foundTheGold
+\STATE currentPosition $\leftarrow$ startingPosition
+\REPEAT
+\STATE nextPosition $\leftarrow$ a safe neighbour of currentPosition that minimises the straight line distance to (0,0)
+\STATE \textbf{moveTo}(nextPosition)
+\STATE currentPosition $\leftarrow$ nextPosition
+\UNTIL{currentPosition = (0,0)} 
+\IF{$\lnot$foundTheGold}
+\STATE \textbf{explore}
+\ENDIF
+\end{algorithmic}
+\end{algorithm}
+
+\end{document}

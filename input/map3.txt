@@ -1,0 +1,6 @@
+4 4
+0 3
+S 0 B P
+W BSG P B
+S 0 B 0
+0 B P B
