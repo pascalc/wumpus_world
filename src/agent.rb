@@ -124,7 +124,11 @@ class Agent
 
 	def escape(pos)
 		puts "Escaping from (#{pos.x},#{pos.y})!"
-		exit
+	 	if @found_gold
+			exit
+		else
+			explore
+		end
 	end
 end
 
