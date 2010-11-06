@@ -41,7 +41,7 @@ class WumpusWorld
 		end
 	end
 
-	def getStateAt(pos)
+	def perceive(pos)
 		flag = @world[pos]
 		state = State.new
 		state.pitPossibility = state.wumpusPossibility = 0
