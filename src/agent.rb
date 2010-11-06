@@ -106,6 +106,7 @@ class Agent
 
 	def escape(pos)
 		puts "Escaping from (#{pos.x},#{pos.y})!"
+		exit
 	end
 
 end
