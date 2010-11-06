@@ -110,11 +110,10 @@ class Agent
 	
 	def isSafe(pos)
 		state = @knowledge_base[pos]
-		puts "Couldn't find (#{pos.x},#{pos.y}) in the knowledge base" if state.nil?
-		if state.black
+		#puts "Couldn't find (#{pos.x},#{pos.y}) in the knowledge base" if state.nil?
+		if state.nil? or state.black
 			res = false
-		end
-		if state.empty or (state.pitPossibility == 0 and state.wumpusPossibility == 0)
+		elsif state.empty or (state.pitPossibility == 0 and state.wumpusPossibility == 0)
 			res = true
 		else
 			res = false
