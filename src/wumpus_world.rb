@@ -45,6 +45,11 @@ class WumpusWorld
 		flag = @world[pos]
 		state = State.new
 		state.pitPossibility = state.wumpusPossibility = 0
+		if flag.nil?
+			state.black = true
+			puts "PERCEIVED Black at (#{pos.x},#{pos.y})"
+			return state
+		end
 		case flag
 				when :Black
 						state.black = true
@@ -67,6 +72,7 @@ class WumpusWorld
 						state.smelly = true
 						state.glittery = true
 		end
+		puts "PERCEIVED #{flag} at (#{pos.x},#{pos.y})"
 		return state
 	end
 end
