@@ -57,6 +57,11 @@ class Agent
 					move_to(base)
 				end
 			end
+			if moves_made == 0
+				escape(base)
+			end
+			base = next_base
+			move_to(base)
 		end
 	end
 	
